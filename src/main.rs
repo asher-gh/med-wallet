@@ -1,7 +1,8 @@
-use std::{net::SocketAddr, time::Duration};
-
+mod upload;
+mod user;
+use crate::{upload::download, user::create_user};
 use axum::{
-    extract::State,
+    extract::{DefaultBodyLimit, State},
     http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
@@ -9,6 +10,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::{PgPool, PgPoolOptions};
+use std::{net::SocketAddr, time::Duration};
 use tracing::{self, debug};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -43,7 +45,10 @@ async fn main() {
         .route("/", get(root))
         // `POST /users` goes to `create_user`
         .route("/users", post(create_user))
-        .with_state(pool);
+        .route("/upload", get(download).post(upload::upload))
+        .with_state(pool)
+        // Replace the default body limit of 2MB with 10MB
+        .layer(DefaultBodyLimit::max(1024 * 1024 * 10));
 
     let address = SocketAddr::from(([127, 0, 0, 1], 3000));
     debug!(
@@ -60,42 +65,4 @@ async fn main() {
 // basic handler that responds with a static string
 async fn root() -> &'static str {
     "Hello, World!"
-}
-
-async fn create_user(
-    State(pool): State<PgPool>,
-    // this argument tells axum to parse the request body
-    // as JSON into a `CreateUser` type
-    Json(payload): Json<CreateUser>,
-) -> impl IntoResponse {
-    // insert your application logic here
-    let user = User {
-        id: 1337,
-        username: payload.username.clone(),
-    };
-
-    sqlx::query!(
-        "INSERT INTO patient (username) VALUES ($1) ON CONFLICT (username) DO NOTHING",
-        payload.username
-    )
-    .execute(&pool)
-    .await
-    .unwrap();
-
-    // this will be converted into a JSON response
-    // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
-}
-
-// the input to our `create_user` handler
-#[derive(Deserialize)]
-struct CreateUser {
-    username: String,
-}
-
-// the output to our `create_user` handler
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    username: String,
 }
