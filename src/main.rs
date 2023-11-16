@@ -1,21 +1,12 @@
-mod upload;
-mod user;
-use crate::{upload::download, user::create_user};
-use axum::{
-    extract::{DefaultBodyLimit, State},
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-    Json, Router,
-};
-use serde::{Deserialize, Serialize};
-use sqlx::postgres::{PgPool, PgPoolOptions};
-use std::{net::SocketAddr, time::Duration};
-use tracing::{self, debug};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use axum::handler::Handler;
+use medwallet_server::*;
+use tower_http::limit::RequestBodyLimitLayer;
 
 #[tokio::main]
 async fn main() {
+    //load .env
+    dotenvy::dotenv().unwrap();
+
     // initialize tracing
     tracing_subscriber::registry()
         .with(
@@ -24,9 +15,6 @@ async fn main() {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
-
-    //load .env
-    dotenvy::dotenv().unwrap();
 
     let db_connection_str = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:password@localhost".to_string());
@@ -45,10 +33,16 @@ async fn main() {
         .route("/", get(root))
         // `POST /users` goes to `create_user`
         .route("/users", post(create_user))
-        .route("/upload", get(download).post(upload::upload))
-        .with_state(pool)
-        // Replace the default body limit of 2MB with 10MB
-        .layer(DefaultBodyLimit::max(1024 * 1024 * 10));
+        .route("/docs/:id", get(serve_asset))
+        .route(
+            "/docs",
+            post(upload_file.layer((
+                // Replace the default body limit of 2MB with 10MB
+                DefaultBodyLimit::disable(),
+                RequestBodyLimitLayer::new(1024 * 10_000 /* ~10mb */),
+            ))),
+        )
+        .with_state(pool);
 
     let address = SocketAddr::from(([127, 0, 0, 1], 3000));
     debug!(
