@@ -9,7 +9,7 @@ pub use axum::{
     routing::{get, post},
     Json, Router,
 };
-pub use files::{serve_asset, upload_file};
+pub use files::{assets_list, serve_asset, upload_file};
 pub use serde::{Deserialize, Serialize};
 pub use sqlx::{postgres::PgPoolOptions, query, query_as, PgPool};
 pub use std::{net::SocketAddr, time::Duration};

@@ -40,7 +40,8 @@ async fn main() {
                 // Replace the default body limit of 2MB with 10MB
                 DefaultBodyLimit::disable(),
                 RequestBodyLimitLayer::new(1024 * 10_000 /* ~10mb */),
-            ))),
+            )))
+            .get(assets_list),
         )
         .with_state(pool);
 

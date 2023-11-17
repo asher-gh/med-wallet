@@ -56,3 +56,18 @@ pub async fn serve_asset(
         .body(Body::from(doc.content.unwrap_or_default()))
         .map_err(|_| StatusCode::NOT_FOUND)
 }
+
+#[derive(Serialize, Debug)]
+pub struct DocList {
+    id: i32,
+}
+
+pub async fn assets_list(State(pool): State<PgPool>) -> Result<Json<Vec<DocList>>, StatusCode> {
+    // TODO: use the auth user's id
+    let docs = sqlx::query_as!(DocList, "select id from document where owner_id = $1", 1)
+        .fetch_all(&pool)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?;
+
+    Ok(Json(docs))
+}
