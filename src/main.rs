@@ -4,8 +4,8 @@ use tower_http::limit::RequestBodyLimitLayer;
 
 #[tokio::main]
 async fn main() {
-    //load .env
-    dotenvy::dotenv().unwrap();
+    //load `.env`
+    dotenvy::dotenv().unwrap_or_default();
 
     // initialize tracing
     tracing_subscriber::registry()
@@ -19,7 +19,7 @@ async fn main() {
     let db_connection_str = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:password@localhost".to_string());
 
-    // set up connection pool
+    // init DB connection and pooling
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(3))
@@ -30,7 +30,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         // `GET /` goes to `root`
-        .route("/", get(root))
+        .route("/", get(|| async { "🚧 Placeholder for Root." }))
         // `POST /users` goes to `create_user`
         .route("/users", post(create_user))
         .route("/docs/:id", get(serve_asset))
@@ -54,9 +54,4 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
-}
-
-// basic handler that responds with a static string
-async fn root() -> &'static str {
-    "Hello, World!"
 }

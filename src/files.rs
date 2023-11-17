@@ -1,7 +1,6 @@
 use crate::*;
 
-// TODO: add the document with authenticated user's id
-
+// TODO: add document to authenticated user's account
 #[derive(Debug)]
 struct Doc {
     name: Option<String>,
@@ -33,7 +32,6 @@ pub async fn upload_file(
 }
 
 // TODO: Authenticate request
-// TODO: return content and filename
 pub async fn serve_asset(
     Path(doc_id): Path<i32>,
     State(pool): State<PgPool>,
