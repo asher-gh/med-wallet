@@ -2,12 +2,13 @@ import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { colors, spacing } from "../theme"
 import { Dimensions, TextStyle, TouchableOpacity, View, ViewStyle, StyleSheet } from "react-native"
-import { AppStackScreenProps, navigate } from "app/navigators"
+import { AppStackScreenProps } from "app/navigators"
 import { Button, Icon, Screen, Text } from "app/components"
 import { Api } from "app/services/api"
 import * as FileSystem from "expo-file-system"
 import * as Progress from "react-native-progress"
 import * as ExpoDocPicker from "expo-document-picker"
+import { useNavigation } from "@react-navigation/native"
 
 interface DocExplorerScreenProps extends AppStackScreenProps<"DocExplorer"> {}
 
@@ -18,13 +19,10 @@ const api = new Api({
 
 const pickDocument = async (): Promise<{ name: string; uri: string } | null> => {
   try {
-    const result = await ExpoDocPicker.getDocumentAsync({
-      // type: "mp4",
-    })
+    const result = await ExpoDocPicker.getDocumentAsync({})
 
     if (!result.canceled) {
       const file = result.assets[0]
-      console.log(file)
       const { name, uri } = file
 
       return {
@@ -79,7 +77,7 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
   }, [docsTrigger])
 
   // Pull in navigation via hook
-  // const navigation = useNavigation()
+  const navigation = useNavigation()
   const FileItem: FC<{ doc: Document }> = ({ doc }) => {
     return (
       <TouchableOpacity
@@ -111,7 +109,7 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
         ))}
       </View>
 
-      <Button onPress={() => navigate("DemoCommunity")}>Back Home</Button>
+      <Button onPress={() => navigation.goBack()}>Back to Home</Button>
       <Button
         onPress={async () => {
           const file = await pickDocument()

@@ -120,7 +120,6 @@ export class Api {
         fieldName: `${fileName}`,
         uploadType: FS.FileSystemUploadType.MULTIPART,
       })
-      console.log(JSON.stringify(res, null, 4))
     } catch (err) {
       console.error(err)
     }
