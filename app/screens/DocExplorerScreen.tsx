@@ -111,7 +111,7 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
         ))}
       </View>
 
-      <Button onPress={() => navigate("DemoCommunity")}>Back to Home</Button>
+      <Button onPress={() => navigate("DemoCommunity")}>Back Home</Button>
       <Button
         onPress={async () => {
           const file = await pickDocument()
