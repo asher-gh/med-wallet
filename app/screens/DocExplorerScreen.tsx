@@ -6,6 +6,7 @@ import { AppStackScreenProps } from "app/navigators"
 import { Button, Icon, Screen, Text } from "app/components"
 import { Api } from "app/services/api"
 import * as FileSystem from "expo-file-system"
+import * as IntentLauncher from "expo-intent-launcher"
 import * as Progress from "react-native-progress"
 import * as ExpoDocPicker from "expo-document-picker"
 import { useNavigation } from "@react-navigation/native"
@@ -36,10 +37,29 @@ const pickDocument = async (): Promise<{ name: string; uri: string } | null> => 
   return null
 }
 
+// Checks if gif directory exists. If not, creates it
+async function ensureDirExists(directory: string) {
+  const dirInfo = await FileSystem.getInfoAsync(directory)
+  if (!dirInfo.exists) {
+    console.log(`${directory} doesn't exist, creating…`)
+    await FileSystem.makeDirectoryAsync(directory, { intermediates: true })
+  }
+}
+
+/* eslint-disable */
+const getFileNameFromHeaders = (headers: Headers) => {
+  const contentDisposition = headers.get("content-disposition")
+  if (!contentDisposition) {
+    return null
+  }
+
+  const filenameMatch = contentDisposition.match(/filename="?(.+)"/)
+  return filenameMatch ? filenameMatch[1] : null
+}
+
 export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function DocExplorerScreen() {
   // Pull in one of our MST stores
   // const { someStore, anotherStore } = useStores()
-  //
 
   type Document = {
     id: string
@@ -53,7 +73,7 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
   const [docs, setDocs] = useState<Document[] | undefined>()
   const [downloadProgress, setDownloadProgress] = useState(0)
 
-  const callback: FileSystem.FileSystemNetworkTaskProgressCallback<
+  const dlProgressCallback: FileSystem.FileSystemNetworkTaskProgressCallback<
     FileSystem.DownloadProgressData
   > = (downloadProgress) => {
     const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite
@@ -61,12 +81,39 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
     setDownloadProgress(progress)
   }
 
-  const downloadResumable = FileSystem.createDownloadResumable(
-    "http://techslides.com/demos/sample-videos/small.mp4",
-    FileSystem.documentDirectory + "small.mp4",
-    {},
-    callback,
-  )
+  /**
+   * Downloads the remote content to file system and opens it in native file viewer using
+   * expo-intent-launcher. This takes the id of the file and requests the resource from the address
+   * configured in the api config.
+   */
+  const viewFile = async (doc: Document) => {
+    const url = `${api.config.url}/docs/${doc.id}`
+
+    await ensureDirExists(FileSystem.cacheDirectory + "documents")
+    await ensureDirExists(FileSystem.cacheDirectory + "junk")
+
+    try {
+      const fileUri = FileSystem.cacheDirectory + `documents/${doc.name}`
+      const downloadResumable = FileSystem.createDownloadResumable(
+        url,
+        fileUri,
+        {},
+        dlProgressCallback,
+      )
+      // download the file and view in the native intent-launcher
+      const { uri } =
+        (await downloadResumable.downloadAsync()) as FileSystem.FileSystemDownloadResult
+
+      FileSystem.getContentUriAsync(uri).then((cUri) => {
+        IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+          data: cUri,
+          flags: 1,
+        })
+      })
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   useEffect(() => {
     api.getDocsList().then((resp) => {
@@ -78,12 +125,10 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
 
   // Pull in navigation via hook
   const navigation = useNavigation()
+
   const FileItem: FC<{ doc: Document }> = ({ doc }) => {
     return (
-      <TouchableOpacity
-        onPress={() => console.log("File pressed", doc)}
-        style={$fileItem.container}
-      >
+      <TouchableOpacity onPress={() => viewFile(doc)} style={$fileItem.container}>
         <Icon icon="components" size={50} color={colors.palette.secondary500} />
         <Text numberOfLines={1} ellipsizeMode="tail" style={$fileItem.text}>
           {doc.name ?? doc.id}
@@ -109,6 +154,18 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
         ))}
       </View>
 
+      {downloadProgress > 0 && downloadProgress < 1 ? (
+        <View style={$progressBarContainer}>
+          <Progress.Bar
+            progress={downloadProgress}
+            color={colors.text}
+            borderColor={colors.border}
+            height={10}
+            width={Dimensions.get("window").width * 0.8}
+          />
+        </View>
+      ) : null}
+
       <Button onPress={() => navigation.goBack()}>Back to Home</Button>
       <Button
         onPress={async () => {
@@ -124,6 +181,12 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
 
       <Button
         onPress={async () => {
+          const downloadResumable = FileSystem.createDownloadResumable(
+            "http://techslides.com/demos/sample-videos/small.mp4",
+            FileSystem.documentDirectory + "small.mp4",
+            {},
+            dlProgressCallback,
+          )
           try {
             const { uri } =
               (await downloadResumable.downloadAsync()) as FileSystem.FileSystemDownloadResult
@@ -133,20 +196,8 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
           }
         }}
       >
-        Download
+        Test Download
       </Button>
-
-      {downloadProgress > 0 && downloadProgress < 1 ? (
-        <View style={$progressBarContainer}>
-          <Progress.Bar
-            progress={downloadProgress}
-            color={colors.text}
-            borderColor={colors.border}
-            height={10}
-            width={Dimensions.get("window").width * 0.8}
-          />
-        </View>
-      ) : null}
     </Screen>
   )
 })
@@ -154,7 +205,7 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
 const $progressBarContainer: ViewStyle = {
   justifyContent: "center",
   flexDirection: "row",
-  marginTop: 10,
+  marginBottom: 10,
 }
 
 const $root: ViewStyle = {
