@@ -1,7 +1,5 @@
 [workspace]
 members = ["server", "libenc"]
-
-
 resolver = "2"
 
 [profile.dev.package.sqlx-macros]
