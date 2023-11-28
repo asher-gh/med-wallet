@@ -10,6 +10,7 @@ import * as IntentLauncher from "expo-intent-launcher"
 import * as Progress from "react-native-progress"
 import * as ExpoDocPicker from "expo-document-picker"
 import { useNavigation } from "@react-navigation/native"
+// import { RustModule } from "../utils/rustModule"
 
 interface DocExplorerScreenProps extends AppStackScreenProps<"DocExplorer"> {}
 
@@ -47,15 +48,15 @@ async function ensureDirExists(directory: string) {
 }
 
 /* eslint-disable */
-const getFileNameFromHeaders = (headers: Headers) => {
-  const contentDisposition = headers.get("content-disposition")
-  if (!contentDisposition) {
-    return null
-  }
-
-  const filenameMatch = contentDisposition.match(/filename="?(.+)"/)
-  return filenameMatch ? filenameMatch[1] : null
-}
+// const getFileNameFromHeaders = (headers: Headers) => {
+//   const contentDisposition = headers.get("content-disposition")
+//   if (!contentDisposition) {
+//     return null
+//   }
+//
+//   const filenameMatch = contentDisposition.match(/filename="?(.+)"/)
+//   return filenameMatch ? filenameMatch[1] : null
+// }
 
 export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function DocExplorerScreen() {
   // Pull in one of our MST stores
@@ -127,6 +128,11 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
   const navigation = useNavigation()
 
   const FileItem: FC<{ doc: Document }> = ({ doc }) => {
+    // try {
+    //   // console.log(RustModule.addNumbers(1, 2))
+    // } catch (e) {
+    //   console.error(e)
+    // }
     return (
       <TouchableOpacity onPress={() => viewFile(doc)} style={$fileItem.container}>
         <Icon icon="components" size={50} color={colors.palette.secondary500} />
