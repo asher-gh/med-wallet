@@ -12,13 +12,13 @@ pub extern "C" fn add_numbers(a: i32, b: i32) -> i32 {
 /// Wrapper function for JNI. This follows JNI naming conventions
 /// and data type conversions.
 #[no_mangle]
-pub unsafe extern "C" fn Java_com_reactnativepro_LibEnc_nativeAddNumbers(
+pub unsafe extern "C" fn Java_com_medwalletapp_RustBridgeModule_nativeAddNumbers(
     env: JNIEnv,
-    class: JClass,
+    jclass: JClass,
     a: jint,
     b: jint,
 ) -> jint {
-    add_numbers(a, b)
+    a + b
 }
 
 #[cfg(test)]

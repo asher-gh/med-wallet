@@ -10,7 +10,7 @@ import * as IntentLauncher from "expo-intent-launcher"
 import * as Progress from "react-native-progress"
 import * as ExpoDocPicker from "expo-document-picker"
 import { useNavigation } from "@react-navigation/native"
-// import { RustModule } from "../utils/rustModule"
+import RustModule from "../utils/rustModule"
 
 interface DocExplorerScreenProps extends AppStackScreenProps<"DocExplorer"> {}
 
@@ -203,6 +203,14 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
         }}
       >
         Test Download
+      </Button>
+      <Button
+        onPress={async () => {
+          let x = await RustModule.addNumbers(1, 2)
+          console.log(x)
+        }}
+      >
+        Test Rust call
       </Button>
     </Screen>
   )

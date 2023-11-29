@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "fhe_enc"
-crate-type = ["cdylib","staticlib"]
+crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 jni = "0.21.1" # Rust bindings to the JNI
