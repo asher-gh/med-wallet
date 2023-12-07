@@ -1,7 +1,18 @@
+mod enc;
+use anyhow::Result;
+use enc::AES;
 use jni::{objects::JClass, sys::jint, JNIEnv};
+use std::fs;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
+}
+
+pub fn encrypt_file(session: &mut AES, file_path: &str) -> Result<Vec<u8>> {
+    // TODO: session and key management
+    let file = fs::read(file_path)?;
+    let cypher = session.encrypt(&file, None)?;
+    Ok(cypher)
 }
 
 #[no_mangle]
@@ -29,5 +40,16 @@ mod tests {
     fn it_works() {
         let result = add(2, 2);
         assert_eq!(result, 4);
+    }
+
+    #[test]
+
+    fn file_encryption() {
+        let mut session = AES::new().unwrap();
+        let cypher = encrypt_file(&mut session, "raven.txt").unwrap();
+        let decrypted = session.decrypt(&cypher).unwrap();
+        let reference = fs::read("raven.txt").unwrap();
+
+        assert_eq!(decrypted, reference);
     }
 }
