@@ -29,8 +29,10 @@ impl AES {
 
     pub fn encrypt(&mut self, data: &[u8], aad: Option<&[u8]>) -> Result<Vec<u8>, Unspecified> {
         #[cfg(debug_assertions)] // don't print this in release
-        println!("key_bytes = {}", hex::encode(&self.key_bytes));
-        println!("data = {}", String::from_utf8(data.to_vec()).unwrap());
+        {
+            println!("key_bytes = {}", hex::encode(&self.key_bytes));
+            println!("data = {}", String::from_utf8(data.to_vec()).unwrap());
+        }
 
         // Create a new AEAD key without a designated role or nonce sequence
         let unbound_key = UnboundKey::new(&AES_256_GCM, &self.key_bytes)?;

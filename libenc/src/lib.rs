@@ -1,35 +1,43 @@
 mod enc;
 use anyhow::Result;
 use enc::AES;
-use jni::{objects::JClass, sys::jint, JNIEnv};
+use jni::{
+    objects::{JByteArray, JClass},
+    JNIEnv,
+};
 use std::fs;
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+// TODO: session and key management
+
+#[no_mangle]
+pub extern "system" fn Java_com_medwalletapp_RustBridgeModule_encryptByteArray<'local>(
+    env: JNIEnv<'local>,
+    _jclass: JClass,
+    data: JByteArray<'local>,
+) -> JByteArray<'local> {
+    let input = env.convert_byte_array(&data).unwrap();
+    let mut session = AES::new().unwrap();
+    let cypher = session.encrypt(&input, None).unwrap();
+    env.byte_array_from_slice(&cypher).unwrap()
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_medwalletapp_RustBridgeModule_decryptByteArray<'local>(
+    env: JNIEnv<'local>,
+    _jclass: JClass,
+    cypher: JByteArray<'local>,
+) -> JByteArray<'local> {
+    let input = env.convert_byte_array(&cypher).unwrap();
+    let session = AES::new().unwrap(); // FIX: This sessino will have a random key which will
+                                       // cause a panic
+    let cypher = session.decrypt(&input).unwrap();
+    env.byte_array_from_slice(&cypher).unwrap()
 }
 
 pub fn encrypt_file(session: &mut AES, file_path: &str) -> Result<Vec<u8>> {
-    // TODO: session and key management
     let file = fs::read(file_path)?;
     let cypher = session.encrypt(&file, None)?;
     Ok(cypher)
-}
-
-#[no_mangle]
-pub extern "C" fn add_numbers(a: i32, b: i32) -> i32 {
-    a + b
-}
-
-/// Wrapper function for JNI. This follows JNI naming conventions
-/// and data type conversions.
-#[no_mangle]
-pub unsafe extern "C" fn Java_com_medwalletapp_RustBridgeModule_nativeAddNumbers(
-    env: JNIEnv,
-    jclass: JClass,
-    a: jint,
-    b: jint,
-) -> jint {
-    a + b
 }
 
 #[cfg(test)]
@@ -37,13 +45,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-
-    #[test]
-
     fn file_encryption() {
         let mut session = AES::new().unwrap();
         let cypher = encrypt_file(&mut session, "raven.txt").unwrap();
