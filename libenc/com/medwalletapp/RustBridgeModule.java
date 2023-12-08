@@ -1,8 +1,12 @@
 package com.medwalletapp;
+import java.nio.charset.StandardCharsets;
 
 class RustBridgeModule {
-  private static native byte[] encryptByteArray(byte[] input);
-  private static native byte[] decryptByteArray(byte[] input);
+  // Pointer to a aes object
+  private static native long createAES(RustBridgeModule callback);
+  private static native byte[] encryptByteArray(long ptr, byte[] input);
+  private static native byte[] decryptByteArray(long ptr, byte[] input);
+  private static native void destroyAES(long aes_ptr);
 
   static { System.loadLibrary("fhe_enc"); }
 
@@ -10,10 +14,17 @@ class RustBridgeModule {
 
     String input = "Hello World!";
     System.out.println("Plain text: " + input);
-    byte[] cypher = encryptByteArray(input.getBytes());
+
+    long aes_ptr = createAES(new RustBridgeModule());
+
+    byte[] cypher = encryptByteArray(aes_ptr, input.getBytes());
     System.out.println("cypher: " + cypher);
 
-    byte[] plainText = decryptByteArray(cypher);
-    System.out.println("decrypted: " + plainText);
+    String decrypted =
+        new String(decryptByteArray(aes_ptr, cypher), StandardCharsets.UTF_8);
+
+    System.out.println("Decrypted: " + decrypted);
+
+    destroyAES(aes_ptr);
   }
 }

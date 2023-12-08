@@ -11,4 +11,5 @@ crate-type = ["cdylib", "staticlib"]
 anyhow = "1.0.75"
 hex = "0.4.3"
 jni = "0.21.1"                                    # Rust bindings to the JNI
+rand = "0.8.5"
 ring = { version = "0.17.7", features = ["std"] }

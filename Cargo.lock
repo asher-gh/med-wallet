@@ -445,6 +445,7 @@ dependencies = [
  "anyhow",
  "hex",
  "jni",
+ "rand",
  "ring",
 ]
 

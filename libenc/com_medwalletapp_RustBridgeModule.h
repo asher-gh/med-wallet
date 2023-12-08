@@ -9,19 +9,27 @@ extern "C" {
 #endif
 /*
  * Class:     com_medwalletapp_RustBridgeModule
- * Method:    hello
- * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ * Method:    createAES
+ * Signature: ()J
  */
-JNIEXPORT jstring JNICALL Java_com_medwalletapp_RustBridgeModule_hello
-  (JNIEnv *, jclass, jstring);
+JNIEXPORT jlong JNICALL Java_com_medwalletapp_RustBridgeModule_createAES
+  (JNIEnv *, jclass);
 
 /*
  * Class:     com_medwalletapp_RustBridgeModule
- * Method:    nativeEncryption
- * Signature: ([B)[B
+ * Method:    encryptByteArray
+ * Signature: (J[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_medwalletapp_RustBridgeModule_nativeEncryption
-  (JNIEnv *, jclass, jbyteArray);
+JNIEXPORT jbyteArray JNICALL Java_com_medwalletapp_RustBridgeModule_encryptByteArray
+  (JNIEnv *, jclass, jlong, jbyteArray);
+
+/*
+ * Class:     com_medwalletapp_RustBridgeModule
+ * Method:    decryptByteArray
+ * Signature: (J[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_medwalletapp_RustBridgeModule_decryptByteArray
+  (JNIEnv *, jclass, jlong, jbyteArray);
 
 #ifdef __cplusplus
 }
