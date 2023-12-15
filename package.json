@@ -38,6 +38,7 @@
     "@react-navigation/native-stack": "^6.0.2",
     "@shopify/flash-list": "1.4.3",
     "apisauce": "3.0.1",
+    "buffer": "^6.0.3",
     "date-fns": "^2.30.0",
     "expo": "^49.0.18",
     "expo-application": "~5.3.0",

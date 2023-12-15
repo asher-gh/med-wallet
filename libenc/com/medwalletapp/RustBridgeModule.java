@@ -3,19 +3,20 @@ import java.nio.charset.StandardCharsets;
 
 class RustBridgeModule {
   // Pointer to a aes object
-  private static native long createAES(RustBridgeModule callback);
+  private static native long createAES();
   private static native byte[] encryptByteArray(long ptr, byte[] input);
   private static native byte[] decryptByteArray(long ptr, byte[] input);
   private static native void destroyAES(long aes_ptr);
-
-  static { System.loadLibrary("fhe_enc"); }
+  private static long aes_ptr;
+  static {
+    System.loadLibrary("fhe_enc");
+    aes_ptr = createAES();
+  }
 
   public static void main(String[] args) {
 
     String input = "Hello World!";
     System.out.println("Plain text: " + input);
-
-    long aes_ptr = createAES(new RustBridgeModule());
 
     byte[] cypher = encryptByteArray(aes_ptr, input.getBytes());
     System.out.println("cypher: " + cypher);

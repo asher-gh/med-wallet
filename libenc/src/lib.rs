@@ -40,12 +40,11 @@ pub unsafe extern "system" fn Java_com_medwalletapp_RustBridgeModule_decryptByte
 pub unsafe extern "system" fn Java_com_medwalletapp_RustBridgeModule_createAES<'local>(
     env: JNIEnv<'local>,
     _jclass: JClass,
-    callback: JObject,
+    // callback: JObject,
 ) -> jlong {
     // this is to avoid GC for callback
-    let _global_ref = env.new_global_ref(callback).unwrap();
+    // let _global_ref = env.new_global_ref(callback).unwrap();
     let aes = AES::new();
-
     Box::into_raw(Box::new(aes)) as jlong
 }
 

@@ -11,6 +11,7 @@ import * as Progress from "react-native-progress"
 import * as ExpoDocPicker from "expo-document-picker"
 import { useNavigation } from "@react-navigation/native"
 import RustModule from "../utils/rustModule"
+import { Buffer } from "buffer"
 
 interface DocExplorerScreenProps extends AppStackScreenProps<"DocExplorer"> {}
 
@@ -70,6 +71,8 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
   // TODO: better state managment for files on disk
   // this is just a hack to rerender upon file upload
   const [docsTrigger, updateDocs] = useState({})
+
+  const [encryptedData, setEncryptedData] = useState("")
 
   const [docs, setDocs] = useState<Document[] | undefined>()
   const [downloadProgress, setDownloadProgress] = useState(0)
@@ -206,11 +209,49 @@ export const DocExplorerScreen: FC<DocExplorerScreenProps> = observer(function D
       </Button>
       <Button
         onPress={async () => {
-          let x = await RustModule.addNumbers(1, 2)
-          console.log(x)
+          const file = await pickDocument()
+
+          if (file) {
+            // read the file in Base64
+            FileSystem.readAsStringAsync(file.uri, { encoding: FileSystem.EncodingType.Base64 })
+              .then((base64String) => RustModule.encryptData(base64String))
+              .then((cypher) => {
+                setEncryptedData(cypher)
+                console.log("Encrypted size: ", encryptedData.length)
+              })
+              .catch((error) => {
+                console.error(error)
+              })
+          }
+          // setEncryptedData("Hello World")
+          // let encrypted: string = await RustModule.encryptData("Hello World")
+          // let decrypted: string = await RustModule.decryptData(encrypted)
+          // console.log(decrypted)
+          // setEncryptedData(encrypted)
+          // console.log("Encrypted: ", encryptedData)
         }}
       >
-        Test Rust call
+        Test Encryption
+      </Button>
+      <Button
+        onPress={async () => {
+          // base64
+          RustModule.decryptData(encryptedData).then((base64Decrypted:string)=>
+          {
+          let decoded = Buffer.from(base64Decrypted, "base64").toString("ascii")
+          console.log(decoded)
+
+          }).catch((error:any) => {
+              console.log(error)
+              })
+          //
+          // let encoded = "SGVsbG8gV29ybGQh"
+
+
+
+        }}
+      >
+        Test Decryption
       </Button>
     </Screen>
   )
